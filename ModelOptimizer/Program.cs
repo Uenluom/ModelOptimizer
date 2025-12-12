@@ -1,4 +1,15 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
+
+const float MiB = 1024 * 1024.0f;
+Console.OutputEncoding = System.Text.Encoding.UTF8;
+
+// Console.Clear doesn't clear the entire scrollback buffer.
+static void ClearConsoleButReally()
+{
+    Console.Clear();
+    Console.WriteLine("\x1b[3J");
+    Console.Clear();
+}
 
 static void CopyDirectory(string sourceDir, string destinationDir, bool recursive)
 {
@@ -40,55 +51,54 @@ static void CopyDirectory(string sourceDir, string destinationDir, bool recursiv
     }
 }
 
-void Write(string text = "", ConsoleColor foreColor = ConsoleColor.White, ConsoleColor backColor = ConsoleColor.Black)
+static void DisplayAuthors()
+{
+    string[] optiPngAuthors = [
+        "Adam Ciarcinski", "Brian McQuade", "Elias Pipping", "Fabien Barbier", "Friedrich Preuss",
+    "Maciej Pilichowski", "Matthew Fearnley", "Nelson A. de Oliveira", "Niels de Koning",
+    "Oliver Schneider", "Petr Gajdos", "Piotr Bandurski", "Priit Laes", "Ramona C. Truta",
+    "Sebastian Pipping", "Stefan Brüns", "Thomas Hurst", "Till Maas", "Ville Skyttä",
+    "Vincent Lefèvre", "Yuen Ho Wong"
+    ];
+
+    for (int i = 0; i < optiPngAuthors.Length; i += 4)
+    {
+        string author1 = i < optiPngAuthors.Length ? optiPngAuthors[i] : "";
+        string author2 = i + 1 < optiPngAuthors.Length ? optiPngAuthors[i + 1] : "";
+        string author3 = i + 2 < optiPngAuthors.Length ? optiPngAuthors[i + 2] : "";
+        string author4 = i + 3 < optiPngAuthors.Length ? optiPngAuthors[i + 3] : "";
+
+        WriteLine(string.Format("{0,24}{1,24}{2,24}{3,24}", author1, author2, author3, author4), ConsoleColor.Yellow);
+    }
+}
+
+static void Write(string text = "", ConsoleColor foreColor = ConsoleColor.White, ConsoleColor backColor = ConsoleColor.Black)
 {
     Console.ForegroundColor = foreColor;
     Console.BackgroundColor = backColor;
     Console.Write(text);
 }
-void WriteLine(string text = "", ConsoleColor foreColor = ConsoleColor.White, ConsoleColor backColor = ConsoleColor.Black)
+static void WriteLine(string text = "", ConsoleColor foreColor = ConsoleColor.White, ConsoleColor backColor = ConsoleColor.Black)
 {
     Console.ForegroundColor = foreColor;
     Console.BackgroundColor = backColor;
     Console.WriteLine(text);
 }
 
-const float MiB = 1024 * 1024.0f;
 
-Console.OutputEncoding = System.Text.Encoding.UTF8;
 
 WriteLine("\x1b[5mModelOptimizer v1.0\x1b[25m");
 Write("  by ");
 WriteLine("Uenluom", ConsoleColor.Red);
 
-WriteLine();
-WriteLine("This program uses OptiPNG, a project by:");
-WriteLine();
+WriteLine("\nThis program uses OptiPNG, a project by:\n");
 
-string[] optiPngAuthors = [
-    "Adam Ciarcinski", "Brian McQuade", "Elias Pipping", "Fabien Barbier", "Friedrich Preuss", 
-    "Maciej Pilichowski", "Matthew Fearnley", "Nelson A. de Oliveira", "Niels de Koning", 
-    "Oliver Schneider", "Petr Gajdos", "Piotr Bandurski", "Priit Laes", "Ramona C. Truta", 
-    "Sebastian Pipping", "Stefan Brüns", "Thomas Hurst", "Till Maas", "Ville Skyttä", 
-    "Vincent Lefèvre", "Yuen Ho Wong"
-];
-int counter = 0;
+DisplayAuthors();
 
-for (int i = 0; i < optiPngAuthors.Length  ; i += 4)
-{
-    string author1 = i < optiPngAuthors.Length ? optiPngAuthors[i] : "";
-    string author2 = i + 1 < optiPngAuthors.Length ? optiPngAuthors[i+ 1] : "";
-    string author3 = i + 2 < optiPngAuthors.Length ? optiPngAuthors[i+ 2] : "";
-    string author4 = i + 3 < optiPngAuthors.Length ? optiPngAuthors[i+ 3] : "";
-
-    WriteLine(string.Format("{0,24}{1,24}{2,24}{3,24}", author1, author2, author3, author4), ConsoleColor.Yellow);
-}
-
-WriteLine();
-WriteLine("OptiPNG is released under the ZLIB license, which can be found here:", ConsoleColor.DarkGray);
-WriteLine("https://optipng.sourceforge.net/license.txt", ConsoleColor.DarkGray);
-
-WriteLine();
+WriteLine(@"
+OptiPNG is released under the ZLIB license, which can be found here:
+https://optipng.sourceforge.net/license.txt
+", ConsoleColor.DarkGray);
 
 
 //=====================================================================================================================
@@ -166,9 +176,7 @@ if (choice is "1")
 }
 else if (choice is "2")
 {
-    Console.Clear();
-    Console.WriteLine("\x1b[3J");
-    Console.Clear();
+    ClearConsoleButReally();
 
     WriteLine(@"Please enter the path to the models. 
     All files under this path will be processed, and 
@@ -187,17 +195,16 @@ enterDirectory:
 
     else
     {
-        Console.Clear();
+        ClearConsoleButReally();
         WriteLine("Got it. Searching for suitable files...");
 
         DirectoryInfo di = new(directoryPath);
         FileInfo[] fis = di.GetFiles("*.png", new EnumerationOptions() { IgnoreInaccessible = true, RecurseSubdirectories = true, MatchCasing = MatchCasing.CaseInsensitive });
 
-        WriteLine($@"Found {fis.Length} files to optimize, totaling {fis.Sum(x => x.Length) / MiB:0.00} MiB.");
-        WriteLine("Use this directory?");
-
-        WriteLine("1) Yes");
-        WriteLine("2) No");
+        WriteLine($@"Found {fis.Length} files to optimize, totaling {fis.Sum(x => x.Length) / MiB:0.00} MiB.
+Use this directory?
+1) Yes
+2) No");
 
     enterDirectoryConfirmationPath1:
 
@@ -221,9 +228,7 @@ enterDirectory:
 }
 else if (choice is "3")
 {
-    Console.Clear();
-    Console.WriteLine("\x1b[3J");
-    Console.Clear();
+    ClearConsoleButReally();
 
     if (easterEgg is 1)
     {
@@ -232,18 +237,14 @@ else if (choice is "3")
         WriteLine("Did you already forget?", ConsoleColor.Red);
         Thread.Sleep(1500);
 
-        Console.Clear();
-        Console.WriteLine("\x1b[3J");
-        Console.Clear();
+        ClearConsoleButReally();
     }
     if (easterEgg is 2)
     {
         WriteLine("It literally says it on the screen before you type 3 what the hell man", ConsoleColor.Red);
         Thread.Sleep(1500);
 
-        Console.Clear();
-        Console.WriteLine("\x1b[3J");
-        Console.Clear();
+        ClearConsoleButReally();
     }
     if (easterEgg is 3)
     {
@@ -254,18 +255,19 @@ else if (choice is "3")
         Environment.Exit(-69);
     }
 
-    WriteLine("ModelOptimizer works by running OptiPNG on all of the model texture files in your VTube Studio data folder.");
-    WriteLine("  \x1b[3mTechnically, you could use it on any folder...\x1b[23m", ConsoleColor.DarkGray);
-    WriteLine();
-    WriteLine("OptiPNG recompresses the data \x1b[4mlosslessly\x1b[24m, meaning that \x1b[4mnone of the color data is changed\x1b[24m.");
-    WriteLine("It does this by trying a bunch of different compression methods. All of the recompression is done on your computer,");
-    WriteLine("and it will take about 1-2 minutes per model (or for models with large texture atlases, 2-4 minutes.)");
-    WriteLine();
-    WriteLine("You should back up your models frequently. This app will copy your entire folder in an attempt to help you out");
-    WriteLine("should anything go wrong. This backup is deleted on future runs.");
-    WriteLine();
-    WriteLine("All that said and done... ");
-    WriteLine();
+    WriteLine(
+@"ModelOptimizer works by running OptiPNG on all of the model texture files in your VTube Studio data folder.
+
+OptiPNG recompresses the data \x1b[4mlosslessly\x1b[24m, meaning that \x1b[4mnone of the color data is changed\x1b[24m.
+It does this by trying a bunch of different compression methods. All of the recompression is done on your computer,
+and it will take about 1-2 minutes per model (or for models with large texture atlases, 2-4 minutes.)
+
+You should back up your models frequently. This app will copy your entire folder in an attempt to help you out
+should anything go wrong. 
+
+All that said and done... 
+
+");
 
     easterEgg++;
 
@@ -281,9 +283,7 @@ else
 gotdir:
 ;
 
-Console.Clear();
-Console.WriteLine("\x1b[3J");
-Console.Clear();
+ClearConsoleButReally();
 
 //=====================================================================================================================
 //
@@ -293,9 +293,8 @@ Console.Clear();
 
 if (!Directory.Exists(directoryPath + ".modopt-backup"))
 {
-    WriteLine("Making a backup since you probably didn't...");
-    WriteLine("    \x1b[3mDon't get angry with me, I'm trying to keep you safe..!\x1b[3m", ConsoleColor.DarkGray);
-    WriteLine("");
+    WriteLine(@"Making a backup since you probably didn't...");
+    WriteLine("\x1b[3mDon't get angry with me, I'm trying to keep you safe..!\x1b[3m\n");
 }
 else
 {
@@ -316,15 +315,11 @@ try
 }
 catch
 {
-    WriteLine("Failed to create backup! Continue anyway?");
-
-    WriteLine("1) Yes");
-
-    WriteLine("2) No");
-
-    WriteLine("3) Retry");
-
-    WriteLine("4) I'll do it myself (opens File Explorer at the directory)");
+    WriteLine(@"Failed to create backup! Continue anyway?
+    1) Yes
+    2) No
+    3) Retry
+    4) I'll do it myself (open File Explorer)");
 
     choice = Console.ReadLine()?.ToLower()?.Trim() ?? "`";
 
@@ -379,7 +374,7 @@ string optiPngEffort = "-o2";
 
 WriteLine($@"Found {modelImageFiles.Length} files, totaling {modelImageFiles.Sum(x => x.Length) / MiB:0.00}MiB.");
 
-WriteLine($"OptiPNG Effort: {optiPngEffort}");
+WriteLine($@"OptiPNG Effort: {optiPngEffort}");
 WriteLine($"  \x1b[3mThe tradeoff between effort and time past -o2 is not worth it (minutes for tens of bytes).\x1b[23m", ConsoleColor.DarkGray);
 WriteLine($"Beginning operation...");
 WriteLine();
@@ -428,8 +423,6 @@ foreach (FileInfo modelImageFile in modelImageFiles)
     totalSizeAfter += modelImageFile.Length;
 }
 
-Write();
-
 
 //=====================================================================================================================
 //
@@ -438,17 +431,16 @@ Write();
 //=====================================================================================================================
 
 
-Write($"Total Size Before: ");
+Write("Total Size Before: ");
 WriteLine($"{totalSizeBefore / MiB:0.00} MiB", ConsoleColor.Red);
 
-Write($"Total Size After:  ");
+Write("Total Size After:  ");
 WriteLine($"{totalSizeAfter / MiB:0.00} MiB", ConsoleColor.Green);
 
-Write($"Total Size Difference:  ");
-WriteLine($"{(totalSizeBefore - totalSizeAfter )/ MiB:0.00} MiB", ConsoleColor.Yellow);
+Write("Total Size Difference:  ");
+WriteLine($"{(totalSizeBefore - totalSizeAfter) / MiB:0.00} MiB", ConsoleColor.Yellow);
 
-Write();
-
+// Reset color to white
 WriteLine("Press ENTER to exit.");
 
 Console.ReadLine();
