@@ -1,7 +1,11 @@
 using System.Diagnostics;
+using System.Text;
+using System.Text.Unicode;
 
 const float MiB = 1024 * 1024.0f;
+
 Console.OutputEncoding = System.Text.Encoding.UTF8;
+Console.InputEncoding = System.Text.Encoding.UTF8;
 
 // Console.Clear doesn't clear the entire scrollback buffer.
 static void ClearConsoleButReally()
@@ -87,9 +91,13 @@ static void WriteLine(string text = "", ConsoleColor foreColor = ConsoleColor.Wh
 
 
 
-WriteLine("\x1b[5mModelOptimizer v1.0\x1b[25m");
+WriteLine("\x1b[5mModelOptimizer v1.1\x1b[25m");
 Write("  by ");
 WriteLine("Uenluom", ConsoleColor.Red);
+
+WriteLine("");
+WriteLine("This update fixes CJK characters in file paths as well as adding a holdopen when the operation is complete!");
+WriteLine("");
 
 WriteLine("\nThis program uses OptiPNG, a project by:\n");
 
@@ -386,7 +394,21 @@ int fileIndex = 0;
 foreach (FileInfo modelImageFile in modelImageFiles)
 {
     fileIndex++;
+    
+    string fileName = modelImageFile.FullName;
+    bool fileNameIsTemporary = false;
+
+    if (fileName.Any(x => x < 0x20 || x > 0x7F)) {
+        WriteLine(" (OptiPNG only supports ASCII names, using temporary copy...)");
+
+        fileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Temp", "modopt-subject.png");
+        fileNameIsTemporary = true;
+
+        File.Copy(modelImageFile.FullName, fileName, true);
+    }
+
     WriteLine($"\u001b[0K\x1b[4m{modelImageFile.FullName.Replace(directoryPath, "~")}\x1b[24m", ConsoleColor.DarkGray);
+
     Write("  Was ");
     Write($"{modelImageFile.Length / MiB:0.00} MiB", ConsoleColor.Red);
 
@@ -398,23 +420,37 @@ foreach (FileInfo modelImageFile in modelImageFiles)
     WriteLine();
     Write($"\x1b[3m  ({modelImageFiles.Length - fileIndex} files left)\x1b[23m", ConsoleColor.DarkGray);
 
-    Process? p = Process.Start(
-        new ProcessStartInfo("optipng.exe", $"\"{modelImageFile.FullName}\"")
-        {
-            CreateNoWindow = true,
-            UseShellExecute = false,
-            RedirectStandardError = true,
-            RedirectStandardOutput = true,
-            RedirectStandardInput = true
-        });
+   
+
+    ProcessStartInfo startInfo = new() {
+        FileName = "optipng.exe",
+        Arguments = $"-preserve -o2 -- \"{fileName}\"",
+        CreateNoWindow = true,
+        UseShellExecute = false,
+        RedirectStandardError = true,
+        RedirectStandardOutput = true,
+        RedirectStandardInput = true,
+        StandardOutputEncoding = Encoding.UTF8,
+        StandardInputEncoding = Encoding.UTF8
+    };
+
+    Process? p = Process.Start(startInfo);
     p?.WaitForExit();
 
-    //Console.SetCursorPosition(l, t);
-    //Thread.Sleep(50);
+    if(fileNameIsTemporary) {
+        FileInfo finf = new FileInfo(fileName);
+
+        if (finf.Length > 1024) {
+            File.Copy(fileName, modelImageFile.FullName, true);
+        }
+        else {
+            WriteLine("Not copying file back (Length < 1kB, broken file?)");
+        }
+
+        File.Delete(fileName);
+    }
 
     modelImageFile.Refresh();
-
-    //int magnitude = 1 + ($"{modelImageFiles.Length - fileIndex}".Length);
 
     Write($"\x1b[2A\x1b[{l + 1}G, now ");
     WriteLine($"{modelImageFile.Length / MiB:0.00} MiB", ConsoleColor.Green);
